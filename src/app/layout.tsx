@@ -46,7 +46,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           <SidebarProvider defaultOpen={true}>
             <main className="h-screen flex w-full">{children}</main>
           </SidebarProvider>
