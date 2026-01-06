@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  MapClusterLayer,
   Map as MapComponent,
   MapControls,
   MapMarker,
@@ -13,6 +12,7 @@ import {
 import { MarkerPopup } from "@/components/ui/map";
 import { cn } from "@/lib/utils";
 import type { Location, ServiceStation } from "@/types/service-station";
+import { HomeIcon, MapPinIcon } from "lucide-react";
 import { useEffect } from "react";
 
 interface MapDisplayProps {
@@ -120,9 +120,7 @@ export function MapDisplay({
           latitude={startLocation.latitude}
         >
           <MarkerContent>
-            <div className="relative">
-              <div className="size-4 rounded-full border-2 border-foreground bg-primary shadow-lg" />
-            </div>
+            <HomeIcon className="fill-primary stroke-foreground size-6 shadow-lg" />
           </MarkerContent>
         </MapMarker>
       )}
@@ -133,9 +131,7 @@ export function MapDisplay({
           latitude={endLocation.latitude}
         >
           <MarkerContent>
-            <div className="relative">
-              <div className="size-4 rounded-full border-2 border-foreground bg-primary shadow-lg" />
-            </div>
+            <MapPinIcon className="fill-primary stroke-foreground size-6 shadow-lg" />
           </MarkerContent>
         </MapMarker>
       )}
@@ -157,7 +153,9 @@ function StationMarker({
   station,
   isOnRoute = false,
 }: { station: ServiceStation; isOnRoute: boolean }) {
-  const styles = isOnRoute ? "size-4 bg-primary" : "size-2 bg-primary/60";
+  const styles = isOnRoute
+    ? "size-4 bg-primary border-foreground border-2"
+    : "size-2 bg-primary/60";
 
   return (
     <MapMarker

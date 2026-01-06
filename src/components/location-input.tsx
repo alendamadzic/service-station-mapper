@@ -2,7 +2,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
 import {
   InputGroup,
   InputGroupAddon,
@@ -24,6 +23,7 @@ interface LocationInputProps {
   value: Location | null;
   onChange: (location: Location | null) => void;
   placeholder?: string;
+  icon?: React.ReactNode;
 }
 
 export function LocationInput({
@@ -31,6 +31,7 @@ export function LocationInput({
   value,
   onChange,
   placeholder = "Enter address or postcode",
+  icon = <MapPinIcon />,
 }: LocationInputProps) {
   const [query, setQuery] = useState("");
   const [suggestions, setSuggestions] = useState<GeocodingResult[]>([]);
@@ -176,7 +177,7 @@ export function LocationInput({
                 placeholder={placeholder}
               />
               <InputGroupAddon>
-                {isLoading ? <Spinner /> : <MapPinIcon />}
+                {isLoading ? <Spinner /> : icon}
               </InputGroupAddon>
               <InputGroupAddon align="inline-end">
                 {value && (

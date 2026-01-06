@@ -26,7 +26,7 @@ import type {
   ServiceStation,
   ServiceStationWithDistance,
 } from "@/types/service-station";
-import { Fuel, RouteIcon } from "lucide-react";
+import { Fuel, HomeIcon, RouteIcon } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -134,6 +134,7 @@ export default function Page() {
               label="Start"
               value={startLocation}
               onChange={setStartLocation}
+              icon={<HomeIcon />}
             />
             <LocationInput
               label="Destination"
