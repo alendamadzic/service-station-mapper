@@ -8,10 +8,15 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import {
+  Popover,
+  PopoverAnchor,
+  PopoverContent,
+} from "@/components/ui/popover";
 import { Spinner } from "@/components/ui/spinner";
 import { geocodeAction } from "@/lib/actions/geocode";
 import type { GeocodingResult, Location } from "@/types/service-station";
-import { Loader2, MapPinIcon, X } from "lucide-react";
+import { MapPinIcon, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface LocationInputProps {
@@ -33,8 +38,10 @@ export function LocationInput({
   const [showSuggestions, setShowSuggestions] = useState(false);
   const previousValueRef = useRef<Location | null>(value);
   const isUserSelectingRef = useRef(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const blurTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const inputGroupRef = useRef<HTMLDivElement>(null);
+  const [popoverWidth, setPopoverWidth] = useState<number | undefined>(
+    undefined,
+  );
 
   // Debounced geocoding
   useEffect(() => {
@@ -70,11 +77,6 @@ export function LocationInput({
         latitude: Number.parseFloat(result.lat),
       };
       isUserSelectingRef.current = true;
-      // Clear any pending blur timeout
-      if (blurTimeoutRef.current) {
-        clearTimeout(blurTimeoutRef.current);
-        blurTimeoutRef.current = null;
-      }
       setQuery(result.display_name);
       onChange(location);
       setShowSuggestions(false);
@@ -113,102 +115,95 @@ export function LocationInput({
     // Don't update if user is typing (query changes but value hasn't changed externally)
   }, [value]);
 
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (blurTimeoutRef.current) {
-        clearTimeout(blurTimeoutRef.current);
-      }
-    };
-  }, []);
-
-  // Handle click outside to close suggestions
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        // Clear any pending blur timeout since we're closing manually
-        if (blurTimeoutRef.current) {
-          clearTimeout(blurTimeoutRef.current);
-          blurTimeoutRef.current = null;
-        }
-        setShowSuggestions(false);
-      }
-    };
-
-    if (showSuggestions) {
-      document.addEventListener("mousedown", handleClickOutside);
-      return () => {
-        document.removeEventListener("mousedown", handleClickOutside);
-      };
-    }
-  }, [showSuggestions]);
-
-  const handleBlur = () => {
-    // Use a small timeout to allow clicks on suggestions to register first
-    blurTimeoutRef.current = setTimeout(() => {
-      setShowSuggestions(false);
-      blurTimeoutRef.current = null;
-    }, 200);
-  };
-
   const handleFocus = () => {
-    // Clear any pending blur timeout if refocusing quickly
-    if (blurTimeoutRef.current) {
-      clearTimeout(blurTimeoutRef.current);
-      blurTimeoutRef.current = null;
-    }
     if (suggestions.length > 0) {
       setShowSuggestions(true);
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    setShowSuggestions(open);
+  };
+
+  // Update popover width based on input group
+  const handleInputGroupRef = useCallback((node: HTMLDivElement | null) => {
+    inputGroupRef.current = node;
+    if (node) {
+      setPopoverWidth(node.offsetWidth);
+    }
+  }, []);
+
+  // Set up resize observer for width updates
+  useEffect(() => {
+    if (!inputGroupRef.current) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (inputGroupRef.current) {
+        setPopoverWidth(inputGroupRef.current.offsetWidth);
+      }
+    });
+
+    resizeObserver.observe(inputGroupRef.current);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
   return (
-    <div className="relative" ref={containerRef}>
-      <Field>
-        <FieldLabel>{label}</FieldLabel>
-        <InputGroup>
-          <InputGroupInput
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            onFocus={handleFocus}
-            onBlur={handleBlur}
-            placeholder={placeholder}
-          />
-          {showSuggestions && suggestions.length > 0 && (
-            <div className="absolute z-50 w-full mt-20 bg-popover border border-border rounded-sm shadow-md max-h-60 overflow-y-auto">
-              {suggestions.map((result) => (
-                <button
-                  key={result.place_id}
-                  type="button"
-                  className="w-full text-left p-2 hover:bg-accent hover:text-accent-foreground text-sm transition-colors"
-                  onClick={() => handleSelect(result)}
-                >
-                  {result.display_name}
-                </button>
-              ))}
-            </div>
-          )}
-          <InputGroupAddon>
-            {isLoading ? <Spinner /> : <MapPinIcon />}
-          </InputGroupAddon>
-          <InputGroupAddon align="inline-end">
-            {value && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon-xs"
-                onClick={handleClear}
-              >
-                <X className="size-4" />
-              </Button>
-            )}
-          </InputGroupAddon>
-        </InputGroup>
-      </Field>
-    </div>
+    <Field>
+      <FieldLabel>{label}</FieldLabel>
+      <Popover
+        open={showSuggestions && suggestions.length > 0}
+        onOpenChange={handleOpenChange}
+      >
+        <div ref={handleInputGroupRef}>
+          <PopoverAnchor asChild>
+            <InputGroup>
+              <InputGroupInput
+                type="text"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onFocus={handleFocus}
+                placeholder={placeholder}
+              />
+              <InputGroupAddon>
+                {isLoading ? <Spinner /> : <MapPinIcon />}
+              </InputGroupAddon>
+              <InputGroupAddon align="inline-end">
+                {value && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-xs"
+                    onClick={handleClear}
+                  >
+                    <X className="size-4" />
+                  </Button>
+                )}
+              </InputGroupAddon>
+            </InputGroup>
+          </PopoverAnchor>
+        </div>
+        <PopoverContent
+          className="p-0 max-h-60 overflow-y-auto"
+          align="start"
+          side="bottom"
+          sideOffset={4}
+          style={popoverWidth ? { width: `${popoverWidth}px` } : undefined}
+        >
+          {suggestions.map((result) => (
+            <button
+              key={result.place_id}
+              type="button"
+              className="w-full text-left p-2 hover:bg-accent hover:text-accent-foreground text-sm transition-colors first:rounded-t-md last:rounded-b-md"
+              onClick={() => handleSelect(result)}
+            >
+              {result.display_name}
+            </button>
+          ))}
+        </PopoverContent>
+      </Popover>
+    </Field>
   );
 }
