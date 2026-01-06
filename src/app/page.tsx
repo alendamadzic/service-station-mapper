@@ -2,9 +2,21 @@
 
 import { LocationInput } from "@/components/location-input";
 import { MapDisplay } from "@/components/map-display";
-import { RouteSummary } from "@/components/route-summary";
 import { ServiceStationList } from "@/components/service-station-list";
 import { Button } from "@/components/ui/button";
+import { FieldGroup } from "@/components/ui/field";
+import { ModeToggle } from "@/components/ui/mode-toggle";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+} from "@/components/ui/sidebar";
+import { Spinner } from "@/components/ui/spinner";
 import { getRouteAction } from "@/lib/actions/route";
 import { getStationsAction } from "@/lib/actions/stations";
 import { filterServiceStationsAlongRoute } from "@/lib/route-utils";
@@ -14,6 +26,8 @@ import type {
   ServiceStation,
   ServiceStationWithDistance,
 } from "@/types/service-station";
+import { Fuel, RouteIcon } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
@@ -27,9 +41,6 @@ export default function Page() {
   >([]);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
   const [isLoadingStations, setIsLoadingStations] = useState(false);
-  const [selectingLocation, setSelectingLocation] = useState<
-    "start" | "end" | null
-  >(null);
 
   // Load service stations data
   useEffect(() => {
@@ -92,93 +103,84 @@ export default function Page() {
     }
   }, [startLocation, endLocation, allStations]);
 
-  const handleMapClick = useCallback(
-    (location: Location) => {
-      if (selectingLocation === "start") {
-        setStartLocation(location);
-        setSelectingLocation(null);
-        toast.success("Start location set");
-      } else if (selectingLocation === "end") {
-        setEndLocation(location);
-        setSelectingLocation(null);
-        toast.success("End location set");
-      }
-    },
-    [selectingLocation],
-  );
-
-  const handleClearRoute = useCallback(() => {
-    setStartLocation(null);
-    setEndLocation(null);
-    setRoute(null);
-    setFilteredStations([]);
-    setSelectingLocation(null);
-  }, []);
-
   return (
-    <div className="h-screen flex flex-col overflow-hidden">
-      <main className="flex-1 flex flex-col lg:flex-row gap-6 p-6 min-h-0 overflow-hidden">
-        <div className="lg:w-1/3 flex flex-col gap-4 min-h-0 overflow-hidden">
-          <div className="space-y-4">
+    <>
+      <Sidebar variant="inset" className="min-w-md">
+        <SidebarHeader className="mb-4">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" asChild>
+                <Link href="#">
+                  <div className="bg-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-sm">
+                    <Fuel className="size-4" />
+                  </div>
+                  <div className="grid flex-1 text-left leading-tight">
+                    <span className="font-semibold">
+                      Service Station Mapper
+                    </span>
+                    <span className="truncate text-muted-foreground text-xs">
+                      Plan your journey and find service stations along your
+                      route
+                    </span>
+                  </div>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarHeader>
+        <SidebarContent className="p-4 space-y-4">
+          <FieldGroup>
             <LocationInput
-              label="Start Location"
+              label="Start"
               value={startLocation}
               onChange={setStartLocation}
-              onSelectFromMap={() => setSelectingLocation("start")}
-              placeholder="Enter start address or postcode"
             />
             <LocationInput
-              label="End Location"
+              label="Destination"
               value={endLocation}
               onChange={setEndLocation}
-              onSelectFromMap={() => setSelectingLocation("end")}
-              placeholder="Enter end address or postcode"
             />
-            {selectingLocation && (
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  onClick={() => setSelectingLocation(null)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            )}
             <Button
               onClick={handleCalculateRoute}
               disabled={!startLocation || !endLocation || isLoadingRoute}
               className="w-full"
             >
-              {isLoadingRoute ? "Calculating..." : "Route"}
+              {isLoadingRoute ? (
+                <Spinner />
+              ) : (
+                <>
+                  <RouteIcon /> Route
+                </>
+              )}
             </Button>
-          </div>
+          </FieldGroup>
 
           {route && (
-            <RouteSummary
-              route={route}
-              stationCount={filteredStations.length}
-              onClear={handleClearRoute}
+            <ServiceStationList
+              stations={filteredStations}
+              routeDistance={route.distance}
+              routeDuration={route.duration}
+              isLoading={isLoadingRoute || isLoadingStations}
             />
           )}
+        </SidebarContent>
+        <SidebarFooter className="flex flex-row items-center justify-between">
+          <Link href="https://alen.world">
+            <Button variant="link">@alendamadzic</Button>
+          </Link>
+          <ModeToggle />
+        </SidebarFooter>
+      </Sidebar>
 
-          <ServiceStationList
-            stations={filteredStations}
-            isLoading={isLoadingRoute || isLoadingStations}
-          />
-        </div>
-
-        <div className="lg:flex-1">
-          <MapDisplay
-            startLocation={startLocation}
-            endLocation={endLocation}
-            routeCoordinates={route?.coordinates || null}
-            allStations={allStations}
-            filteredStations={filteredStations}
-            onMapClick={handleMapClick}
-            selectingLocation={selectingLocation}
-          />
-        </div>
-      </main>
-    </div>
+      <SidebarInset>
+        <MapDisplay
+          startLocation={startLocation}
+          endLocation={endLocation}
+          routeCoordinates={route?.coordinates || null}
+          allStations={allStations}
+          filteredStations={filteredStations}
+        />
+      </SidebarInset>
+    </>
   );
 }

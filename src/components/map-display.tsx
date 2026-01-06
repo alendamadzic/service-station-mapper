@@ -10,7 +10,6 @@ import {
   useMap,
 } from "@/components/ui/map";
 import type { Location, ServiceStation } from "@/types/service-station";
-import type MapLibreGL from "maplibre-gl";
 import { useEffect } from "react";
 
 interface MapDisplayProps {
@@ -19,8 +18,6 @@ interface MapDisplayProps {
   routeCoordinates: [number, number][] | null;
   allStations: ServiceStation[];
   filteredStations: ServiceStation[];
-  onMapClick?: (location: Location) => void;
-  selectingLocation?: "start" | "end" | null;
 }
 
 function MapFitBounds({
@@ -61,43 +58,12 @@ function MapFitBounds({
   return null;
 }
 
-function MapClickHandler({
-  onMapClick,
-  selectingLocation,
-}: {
-  onMapClick?: (location: Location) => void;
-  selectingLocation?: "start" | "end" | null;
-}) {
-  const { map, isLoaded } = useMap();
-
-  useEffect(() => {
-    if (!isLoaded || !map || !onMapClick || !selectingLocation) return;
-
-    const handleClick = (e: MapLibreGL.MapMouseEvent) => {
-      onMapClick({
-        longitude: e.lngLat.lng,
-        latitude: e.lngLat.lat,
-      });
-    };
-
-    map.on("click", handleClick);
-
-    return () => {
-      map.off("click", handleClick);
-    };
-  }, [map, isLoaded, onMapClick, selectingLocation]);
-
-  return null;
-}
-
 export function MapDisplay({
   startLocation,
   endLocation,
   routeCoordinates,
   allStations,
   filteredStations,
-  onMapClick,
-  selectingLocation,
 }: MapDisplayProps) {
   // Create GeoJSON for filtered stations
   const filteredStationsGeoJSON: GeoJSON.FeatureCollection<GeoJSON.Point> = {
@@ -127,15 +93,11 @@ export function MapDisplay({
   };
 
   return (
-    <div className="relative w-full h-full min-h-[400px]">
+    <div className="relative w-full h-full">
       <MapComponent
         center={[-2.0, 53.0]} // Center of UK
         zoom={6}
       >
-        <MapClickHandler
-          onMapClick={onMapClick}
-          selectingLocation={selectingLocation}
-        />
         <MapControls showZoom position="bottom-right" />
 
         {routeCoordinates && routeCoordinates.length > 0 && (
@@ -190,13 +152,6 @@ export function MapDisplay({
             pointColor="#3b82f6"
             clusterColors={["#60a5fa", "#3b82f6", "#2563eb"]}
           />
-        )}
-
-        {selectingLocation && (
-          <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10 bg-background border border-border rounded-md px-4 py-2 shadow-md text-sm">
-            Click on the map to set{" "}
-            {selectingLocation === "start" ? "start" : "end"} location
-          </div>
         )}
       </MapComponent>
     </div>

@@ -1,17 +1,23 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
+import { Spinner } from "@/components/ui/spinner";
 import { geocodeAction } from "@/lib/actions/geocode";
 import type { GeocodingResult, Location } from "@/types/service-station";
-import { Loader2, MapPin, X } from "lucide-react";
+import { Loader2, MapPinIcon, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface LocationInputProps {
   label: string;
   value: Location | null;
   onChange: (location: Location | null) => void;
-  onSelectFromMap?: () => void;
   placeholder?: string;
 }
 
@@ -19,7 +25,6 @@ export function LocationInput({
   label,
   value,
   onChange,
-  onSelectFromMap,
   placeholder = "Enter address or postcode",
 }: LocationInputProps) {
   const [query, setQuery] = useState("");
@@ -84,7 +89,7 @@ export function LocationInput({
     setShowSuggestions(false);
   }, [onChange]);
 
-  // Update query when value changes externally (e.g., from map click)
+  // Update query when value changes externally
   useEffect(() => {
     const previousValue = previousValueRef.current;
 
@@ -99,7 +104,7 @@ export function LocationInput({
 
     // Only update if value actually changed externally (not from user typing)
     if (value && value !== previousValue) {
-      // Value was set externally (e.g., from map click)
+      // Value was set externally
       setQuery(`${value.latitude.toFixed(4)}, ${value.longitude.toFixed(4)}`);
     } else if (!value && previousValue !== null) {
       // Value was cleared externally (e.g., from clear button)
@@ -162,61 +167,48 @@ export function LocationInput({
 
   return (
     <div className="relative" ref={containerRef}>
-      <label
-        htmlFor={`location-input-${label}`}
-        className="text-sm font-medium mb-1.5 block"
-      >
-        {label}
-      </label>
-      <div className="relative">
-        <Input
-          id={`location-input-${label}`}
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
-          placeholder={placeholder}
-        />
-        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
-          {isLoading && <Loader2 className="size-4 animate-spin" />}
-          {value && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              onClick={handleClear}
-            >
-              <X className="size-4" />
-            </Button>
+      <Field>
+        <FieldLabel>{label}</FieldLabel>
+        <InputGroup>
+          <InputGroupInput
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            placeholder={placeholder}
+          />
+          {showSuggestions && suggestions.length > 0 && (
+            <div className="absolute z-50 w-full mt-20 bg-popover border border-border rounded-sm shadow-md max-h-60 overflow-y-auto">
+              {suggestions.map((result) => (
+                <button
+                  key={result.place_id}
+                  type="button"
+                  className="w-full text-left p-2 hover:bg-accent hover:text-accent-foreground text-sm transition-colors"
+                  onClick={() => handleSelect(result)}
+                >
+                  {result.display_name}
+                </button>
+              ))}
+            </div>
           )}
-          {onSelectFromMap && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon-xs"
-              onClick={onSelectFromMap}
-              title="Click on map to select"
-            >
-              <MapPin className="size-4" />
-            </Button>
-          )}
-        </div>
-      </div>
-      {showSuggestions && suggestions.length > 0 && (
-        <div className="absolute z-50 w-full mt-1 bg-popover border border-border rounded-md shadow-md max-h-60 overflow-y-auto">
-          {suggestions.map((result) => (
-            <button
-              key={result.place_id}
-              type="button"
-              className="w-full text-left px-3 py-2 hover:bg-accent hover:text-accent-foreground text-sm transition-colors"
-              onClick={() => handleSelect(result)}
-            >
-              {result.display_name}
-            </button>
-          ))}
-        </div>
-      )}
+          <InputGroupAddon>
+            {isLoading ? <Spinner /> : <MapPinIcon />}
+          </InputGroupAddon>
+          <InputGroupAddon align="inline-end">
+            {value && (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-xs"
+                onClick={handleClear}
+              >
+                <X className="size-4" />
+              </Button>
+            )}
+          </InputGroupAddon>
+        </InputGroup>
+      </Field>
     </div>
   );
 }
