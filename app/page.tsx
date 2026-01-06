@@ -1,63 +1,196 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { Button } from "@/components/ui/button";
+import { filterServiceStationsAlongRoute } from "@/lib/route-utils";
+import { LocationInput } from "@/src/components/location-input";
+import { MapDisplay } from "@/src/components/map-display";
+import { RouteSummary } from "@/src/components/route-summary";
+import { ServiceStationList } from "@/src/components/service-station-list";
+import type {
+  Location,
+  RouteData,
+  ServiceStation,
+  ServiceStationFeatureCollection,
+  ServiceStationWithDistance,
+} from "@/src/types/service-station";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+
+export default function Page() {
+  const [startLocation, setStartLocation] = useState<Location | null>(null);
+  const [endLocation, setEndLocation] = useState<Location | null>(null);
+  const [route, setRoute] = useState<RouteData | null>(null);
+  const [allStations, setAllStations] = useState<ServiceStation[]>([]);
+  const [filteredStations, setFilteredStations] = useState<
+    ServiceStationWithDistance[]
+  >([]);
+  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+  const [isLoadingStations, setIsLoadingStations] = useState(false);
+  const [selectingLocation, setSelectingLocation] = useState<
+    "start" | "end" | null
+  >(null);
+
+  // Load service stations data
+  useEffect(() => {
+    async function loadStations() {
+      setIsLoadingStations(true);
+      try {
+        const response = await fetch("/api/stations");
+        if (!response.ok) throw new Error("Failed to load stations");
+        const data = (await response.json()) as ServiceStationFeatureCollection;
+        setAllStations(data.features);
+      } catch (error) {
+        console.error("Error loading stations:", error);
+        toast.error("Failed to load service stations");
+      } finally {
+        setIsLoadingStations(false);
+      }
+    }
+    loadStations();
+  }, []);
+
+  // Clear route when locations change
+  useEffect(() => {
+    if (!startLocation || !endLocation) {
+      setRoute(null);
+      setFilteredStations([]);
+    }
+  }, [startLocation, endLocation]);
+
+  // Calculate route handler
+  const handleCalculateRoute = useCallback(async () => {
+    if (!startLocation || !endLocation) {
+      toast.error("Please set both start and end locations");
+      return;
+    }
+
+    setIsLoadingRoute(true);
+    try {
+      const response = await fetch(
+        `/api/route?startLon=${startLocation.longitude}&startLat=${startLocation.latitude}&endLon=${endLocation.longitude}&endLat=${endLocation.latitude}`,
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to calculate route");
+      }
+
+      const routeData = (await response.json()) as RouteData;
+      setRoute(routeData);
+
+      // Filter service stations along the route
+      const filtered = filterServiceStationsAlongRoute(
+        allStations,
+        routeData.coordinates,
+        5, // 5 miles
+      );
+      setFilteredStations(filtered);
+
+      toast.success(`Found ${filtered.length} service stations along route`);
+    } catch (error) {
+      console.error("Route calculation error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to calculate route",
+      );
+      setRoute(null);
+      setFilteredStations([]);
+    } finally {
+      setIsLoadingRoute(false);
+    }
+  }, [startLocation, endLocation, allStations]);
+
+  const handleMapClick = useCallback(
+    (location: Location) => {
+      if (selectingLocation === "start") {
+        setStartLocation(location);
+        setSelectingLocation(null);
+        toast.success("Start location set");
+      } else if (selectingLocation === "end") {
+        setEndLocation(location);
+        setSelectingLocation(null);
+        toast.success("End location set");
+      }
+    },
+    [selectingLocation],
+  );
+
+  const handleClearRoute = useCallback(() => {
+    setStartLocation(null);
+    setEndLocation(null);
+    setRoute(null);
+    setFilteredStations([]);
+    setSelectingLocation(null);
+  }, []);
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <div className="h-screen flex flex-col overflow-hidden">
+      <header className="border-b border-border px-6 py-4 flex-shrink-0">
+        <h1 className="text-2xl font-bold">Service Station Mapper</h1>
+        <p className="text-muted-foreground text-sm mt-1">
+          Plan your journey and find service stations along your route
+        </p>
+      </header>
+
+      <main className="flex-1 flex flex-col lg:flex-row gap-6 p-6 min-h-0 overflow-hidden">
+        <div className="lg:w-1/3 flex flex-col gap-4 min-h-0 overflow-hidden">
+          <div className="space-y-4">
+            <LocationInput
+              label="Start Location"
+              value={startLocation}
+              onChange={setStartLocation}
+              onSelectFromMap={() => setSelectingLocation("start")}
+              placeholder="Enter start address or postcode"
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            <LocationInput
+              label="End Location"
+              value={endLocation}
+              onChange={setEndLocation}
+              onSelectFromMap={() => setSelectingLocation("end")}
+              placeholder="Enter end address or postcode"
+            />
+            {selectingLocation && (
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => setSelectingLocation(null)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
+            <Button
+              onClick={handleCalculateRoute}
+              disabled={!startLocation || !endLocation || isLoadingRoute}
+              className="w-full"
+            >
+              {isLoadingRoute ? "Calculating..." : "Route"}
+            </Button>
+          </div>
+
+          {route && (
+            <RouteSummary
+              route={route}
+              stationCount={filteredStations.length}
+              onClear={handleClearRoute}
+            />
+          )}
+
+          <ServiceStationList
+            stations={filteredStations}
+            isLoading={isLoadingRoute || isLoadingStations}
+          />
+        </div>
+
+        <div className="lg:flex-1">
+          <MapDisplay
+            startLocation={startLocation}
+            endLocation={endLocation}
+            routeCoordinates={route?.coordinates || null}
+            allStations={allStations}
+            filteredStations={filteredStations}
+            onMapClick={handleMapClick}
+            selectingLocation={selectingLocation}
+          />
         </div>
       </main>
     </div>
