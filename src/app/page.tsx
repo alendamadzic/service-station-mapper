@@ -15,7 +15,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { getRouteAction } from "@/lib/actions/route";
@@ -175,7 +174,6 @@ export default function Page() {
       </Sidebar>
 
       <SidebarInset>
-        <SidebarTrigger className="absolute top-4 left-4 z-50" />
         <MapDisplay
           startLocation={startLocation}
           endLocation={endLocation}
