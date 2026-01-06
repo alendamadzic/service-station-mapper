@@ -42,9 +42,15 @@ export function LocationInput({
   const [popoverWidth, setPopoverWidth] = useState<number | undefined>(
     undefined,
   );
+  const skipNextSearchRef = useRef(false);
 
   // Debounced geocoding
   useEffect(() => {
+    if (skipNextSearchRef.current) {
+      skipNextSearchRef.current = false;
+      return;
+    }
+
     if (!query.trim()) {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -77,9 +83,11 @@ export function LocationInput({
         latitude: Number.parseFloat(result.lat),
       };
       isUserSelectingRef.current = true;
+      skipNextSearchRef.current = true;
       setQuery(result.display_name);
-      onChange(location);
+      setSuggestions([]);
       setShowSuggestions(false);
+      onChange(location);
     },
     [onChange],
   );
@@ -191,6 +199,7 @@ export function LocationInput({
           side="bottom"
           sideOffset={4}
           style={popoverWidth ? { width: `${popoverWidth}px` } : undefined}
+          onOpenAutoFocus={(e) => e.preventDefault()}
         >
           {suggestions.map((result) => (
             <button
