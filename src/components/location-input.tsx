@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { geocodeAction } from "@/lib/actions/geocode";
 import type { GeocodingResult, Location } from "@/types/service-station";
 import { Loader2, MapPin, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -41,14 +42,12 @@ export function LocationInput({
     const timeoutId = setTimeout(async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(
-          `/api/geocode?q=${encodeURIComponent(query)}&limit=5&countrycodes=gb`,
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setSuggestions(data);
-          setShowSuggestions(true);
-        }
+        const data = await geocodeAction(query, {
+          limit: 5,
+          countrycodes: "gb",
+        });
+        setSuggestions(data);
+        setShowSuggestions(true);
       } catch (error) {
         console.error("Geocoding error:", error);
       } finally {

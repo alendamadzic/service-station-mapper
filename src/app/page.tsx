@@ -5,12 +5,13 @@ import { MapDisplay } from "@/components/map-display";
 import { RouteSummary } from "@/components/route-summary";
 import { ServiceStationList } from "@/components/service-station-list";
 import { Button } from "@/components/ui/button";
+import { getRouteAction } from "@/lib/actions/route";
+import { getStationsAction } from "@/lib/actions/stations";
 import { filterServiceStationsAlongRoute } from "@/lib/route-utils";
 import type {
   Location,
   RouteData,
   ServiceStation,
-  ServiceStationFeatureCollection,
   ServiceStationWithDistance,
 } from "@/types/service-station";
 import { useCallback, useEffect, useState } from "react";
@@ -35,9 +36,7 @@ export default function Page() {
     async function loadStations() {
       setIsLoadingStations(true);
       try {
-        const response = await fetch("/api/stations");
-        if (!response.ok) throw new Error("Failed to load stations");
-        const data = (await response.json()) as ServiceStationFeatureCollection;
+        const data = await getStationsAction();
         setAllStations(data.features);
       } catch (error) {
         console.error("Error loading stations:", error);
@@ -66,16 +65,10 @@ export default function Page() {
 
     setIsLoadingRoute(true);
     try {
-      const response = await fetch(
-        `/api/route?startLon=${startLocation.longitude}&startLat=${startLocation.latitude}&endLon=${endLocation.longitude}&endLat=${endLocation.latitude}`,
+      const routeData = await getRouteAction(
+        [startLocation.longitude, startLocation.latitude],
+        [endLocation.longitude, endLocation.latitude],
       );
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to calculate route");
-      }
-
-      const routeData = (await response.json()) as RouteData;
       setRoute(routeData);
 
       // Filter service stations along the route
