@@ -93,67 +93,65 @@ export function MapDisplay({
   };
 
   return (
-    <div className="relative w-full h-full">
-      <MapComponent
-        center={[-2.0, 53.0]} // Center of UK
-        zoom={6}
-      >
-        <MapControls showZoom position="bottom-right" />
+    <MapComponent
+      center={[-2.0, 53.0]} // Center of UK
+      zoom={6}
+    >
+      <MapControls showZoom showCompass position="bottom-right" />
 
-        {routeCoordinates && routeCoordinates.length > 0 && (
-          <>
-            <MapFitBounds coordinates={routeCoordinates} />
-            <MapRoute
-              coordinates={routeCoordinates}
-              color="#4285F4"
-              width={4}
-              opacity={0.8}
-            />
-          </>
-        )}
-
-        {startLocation && (
-          <MapMarker
-            longitude={startLocation.longitude}
-            latitude={startLocation.latitude}
-          >
-            <MarkerContent>
-              <div className="relative">
-                <div className="size-4 rounded-full border-2 border-white bg-green-500 shadow-lg" />
-              </div>
-            </MarkerContent>
-          </MapMarker>
-        )}
-
-        {endLocation && (
-          <MapMarker
-            longitude={endLocation.longitude}
-            latitude={endLocation.latitude}
-          >
-            <MarkerContent>
-              <div className="relative">
-                <div className="size-4 rounded-full border-2 border-white bg-red-500 shadow-lg" />
-              </div>
-            </MarkerContent>
-          </MapMarker>
-        )}
-
-        {filteredStations.length > 0 && (
-          <MapClusterLayer
-            data={filteredStationsGeoJSON}
-            pointColor="#f97316"
-            clusterColors={["#fb923c", "#f97316", "#ea580c"]}
+      {routeCoordinates && routeCoordinates.length > 0 && (
+        <>
+          <MapFitBounds coordinates={routeCoordinates} />
+          <MapRoute
+            coordinates={routeCoordinates}
+            color="#3b82f6"
+            width={4}
+            opacity={0.8}
           />
-        )}
+        </>
+      )}
 
-        {allStationsGeoJSON.features.length > 0 && (
-          <MapClusterLayer
-            data={allStationsGeoJSON}
-            pointColor="#3b82f6"
-            clusterColors={["#60a5fa", "#3b82f6", "#2563eb"]}
-          />
-        )}
-      </MapComponent>
-    </div>
+      {startLocation && (
+        <MapMarker
+          longitude={startLocation.longitude}
+          latitude={startLocation.latitude}
+        >
+          <MarkerContent>
+            <div className="relative">
+              <div className="size-4 rounded-full border-2 border-foreground bg-primary shadow-lg" />
+            </div>
+          </MarkerContent>
+        </MapMarker>
+      )}
+
+      {endLocation && (
+        <MapMarker
+          longitude={endLocation.longitude}
+          latitude={endLocation.latitude}
+        >
+          <MarkerContent>
+            <div className="relative">
+              <div className="size-4 rounded-full border-2 border-foreground bg-primary shadow-lg" />
+            </div>
+          </MarkerContent>
+        </MapMarker>
+      )}
+
+      {filteredStations.length > 0 && (
+        <MapClusterLayer
+          data={filteredStationsGeoJSON}
+          pointColor="#f97316"
+          clusterColors={["#fb923c", "#f97316", "#ea580c"]}
+        />
+      )}
+
+      {allStationsGeoJSON.features.length > 0 && (
+        <MapClusterLayer
+          data={allStationsGeoJSON}
+          pointColor="#3b82f6"
+          clusterColors={["#60a5fa", "#3b82f6", "#2563eb"]}
+        />
+      )}
+    </MapComponent>
   );
 }
