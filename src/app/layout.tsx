@@ -3,8 +3,7 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+import { Header } from "@/components/header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,9 +15,25 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const defaultUrl = process.env.VERCEL_URL
+  ? `https://${process.env.VERCEL_URL}`
+  : "http://localhost:3000";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(defaultUrl),
   title: "Service Station Mapper",
   description: "Find service stations along your route in the UK",
+  keywords: [
+    "maps",
+    "route",
+    "gas stations",
+    "service stations",
+    "fuel",
+    "gas",
+    "uk",
+    "journey planner",
+    "navigation",
+  ],
 };
 
 export default function RootLayout({
@@ -27,11 +42,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Header />
           {children}
           <Toaster />
         </ThemeProvider>

@@ -117,13 +117,6 @@ export default function Page() {
 
   return (
     <div className="h-screen flex flex-col overflow-hidden">
-      <header className="border-b border-border px-6 py-4 flex-shrink-0">
-        <h1 className="text-2xl font-bold">Service Station Mapper</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Plan your journey and find service stations along your route
-        </p>
-      </header>
-
       <main className="flex-1 flex flex-col lg:flex-row gap-6 p-6 min-h-0 overflow-hidden">
         <div className="lg:w-1/3 flex flex-col gap-4 min-h-0 overflow-hidden">
           <div className="space-y-4">
