@@ -7,8 +7,11 @@ import {
   MapMarker,
   MapRoute,
   MarkerContent,
+  MarkerTooltip,
   useMap,
 } from "@/components/ui/map";
+import { MarkerPopup } from "@/components/ui/map";
+import { cn } from "@/lib/utils";
 import type { Location, ServiceStation } from "@/types/service-station";
 import { useEffect } from "react";
 
@@ -137,21 +140,34 @@ export function MapDisplay({
         </MapMarker>
       )}
 
-      {filteredStations.length > 0 && (
-        <MapClusterLayer
-          data={filteredStationsGeoJSON}
-          pointColor="#f97316"
-          clusterColors={["#fb923c", "#f97316", "#ea580c"]}
+      {allStations.map((station) => (
+        <StationMarker
+          key={station.properties.name}
+          station={station}
+          isOnRoute={filteredStations.some(
+            (s) => s.properties.name === station.properties.name,
+          )}
         />
-      )}
-
-      {allStationsGeoJSON.features.length > 0 && (
-        <MapClusterLayer
-          data={allStationsGeoJSON}
-          pointColor="#3b82f6"
-          clusterColors={["#60a5fa", "#3b82f6", "#2563eb"]}
-        />
-      )}
+      ))}
     </MapComponent>
+  );
+}
+
+function StationMarker({
+  station,
+  isOnRoute = false,
+}: { station: ServiceStation; isOnRoute: boolean }) {
+  const styles = isOnRoute ? "size-4 bg-primary" : "size-2 bg-primary/60";
+
+  return (
+    <MapMarker
+      longitude={station.geometry.coordinates[0]}
+      latitude={station.geometry.coordinates[1]}
+    >
+      <MarkerContent>
+        <div className={cn("rounded-full", styles)} />
+      </MarkerContent>
+      <MarkerTooltip>{station.properties.name}</MarkerTooltip>
+    </MapMarker>
   );
 }
