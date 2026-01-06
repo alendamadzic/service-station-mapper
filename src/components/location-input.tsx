@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { GeocodingResult, Location } from "@/src/types/service-station";
+import type { GeocodingResult, Location } from "@/types/service-station";
 import { Loader2, MapPin, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 

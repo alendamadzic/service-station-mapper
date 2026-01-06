@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { RouteData } from "@/src/types/service-station";
+import type { RouteData } from "@/types/service-station";
 import { X } from "lucide-react";
 
 interface RouteSummaryProps {

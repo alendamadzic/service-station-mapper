@@ -1,18 +1,18 @@
 "use client";
 
+import { LocationInput } from "@/components/location-input";
+import { MapDisplay } from "@/components/map-display";
+import { RouteSummary } from "@/components/route-summary";
+import { ServiceStationList } from "@/components/service-station-list";
 import { Button } from "@/components/ui/button";
 import { filterServiceStationsAlongRoute } from "@/lib/route-utils";
-import { LocationInput } from "@/src/components/location-input";
-import { MapDisplay } from "@/src/components/map-display";
-import { RouteSummary } from "@/src/components/route-summary";
-import { ServiceStationList } from "@/src/components/service-station-list";
 import type {
   Location,
   RouteData,
   ServiceStation,
   ServiceStationFeatureCollection,
   ServiceStationWithDistance,
-} from "@/src/types/service-station";
+} from "@/types/service-station";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 

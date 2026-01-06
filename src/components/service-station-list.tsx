@@ -2,7 +2,7 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import type { ServiceStationWithDistance } from "@/src/types/service-station";
+import type { ServiceStationWithDistance } from "@/types/service-station";
 import { ExternalLink } from "lucide-react";
 
 interface ServiceStationListProps {

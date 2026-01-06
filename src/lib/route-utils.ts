@@ -2,7 +2,7 @@ import type {
   Location,
   ServiceStation,
   ServiceStationWithDistance,
-} from "@/src/types/service-station";
+} from "@/types/service-station";
 
 const EARTH_RADIUS_MILES = 3959; // Earth's radius in miles
 

@@ -1,4 +1,4 @@
-import type { RouteData } from "@/src/types/service-station";
+import type { RouteData } from "@/types/service-station";
 
 interface OSRMRouteResponse {
   code: string;

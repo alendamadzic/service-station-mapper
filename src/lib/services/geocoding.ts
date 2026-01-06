@@ -1,4 +1,4 @@
-import type { GeocodingResult } from "@/src/types/service-station";
+import type { GeocodingResult } from "@/types/service-station";
 
 const NOMINATIM_BASE_URL = "https://nominatim.openstreetmap.org/search";
 

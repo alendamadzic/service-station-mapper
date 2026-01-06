@@ -9,7 +9,7 @@ import {
   MarkerContent,
   useMap,
 } from "@/components/ui/map";
-import type { Location, ServiceStation } from "@/src/types/service-station";
+import type { Location, ServiceStation } from "@/types/service-station";
 import type MapLibreGL from "maplibre-gl";
 import { useEffect } from "react";
 
